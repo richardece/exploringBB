@@ -17,7 +17,11 @@ MODULE_AUTHOR("Derek Molloy");
 MODULE_DESCRIPTION("A Button/LED test driver for the Beagle");
 MODULE_VERSION("0.1");
 
-static unsigned int gpioLED = 60;       // P9_12/P2.8 (GPIO60)
+static char *name = "world"; // example LKM argument default is "world"
+// param description charp = char pointer, defaults to "world"
+module_param(name, charp, S_IRUGO); // S_IRUGO can be read/not changed
+MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");
+
 static unsigned int gpioButton = 46;    // P8_16/P2.22 (GPIO46)
 static unsigned int irqNumber;          // share IRQ num within file
 static unsigned int numberPresses = 0;  // store number of presses
@@ -29,11 +33,7 @@ static irq_handler_t  ebb_gpio_irq_handler(unsigned int irq, void
 /** @brief The LKM initialization function */
 static int __init ebb_gpio_init(void){
    int result = 0;
-   printk(KERN_INFO "GPIO_TEST: Initializing the GPIO_TEST LKM\n");
-   if (!gpio_is_valid(gpioLED)){
-      printk(KERN_INFO "GPIO_TEST: invalid LED GPIO\n");
-      return -ENODEV;
-   }
+   printk(KERN_INFO "GPIO_TEST: Hello %s from GPIO_TEST LKM!\n", name);
 
    gpio_request(gpioButton, "sysfs");       // set up gpioButton
    gpio_direction_input(gpioButton);        // set up as input
@@ -57,15 +57,15 @@ static int __init ebb_gpio_init(void){
 
 /** @brief The LKM cleanup function  */
 static void __exit ebb_gpio_exit(void){
-   printk(KERN_INFO "GPIO_TEST: button value is currently: %d\n",
-          gpio_get_value(gpioButton));
+
    printk(KERN_INFO "GPIO_TEST: pressed %d times\n", numberPresses);
 
    free_irq(irqNumber, NULL);     // free the IRQ number, no *dev_id
    gpio_unexport(gpioButton);     // unexport the Button GPIO
    gpio_free(gpioButton);         // free the Button GPIO
 
-   printk(KERN_INFO "GPIO_TEST: Goodbye from the LKM!\n");
+   printk(KERN_INFO "GPIO_TEST: Goodbye %s from GPIO_TEST LKM!\n", name);
+
 }
 
 /** @brief The GPIO IRQ Handler function
